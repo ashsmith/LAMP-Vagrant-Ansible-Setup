@@ -1,0 +1,41 @@
+- hosts: all
+  sudo: True
+  vars:
+    apache_vhosts:
+        - {servername: "127.0.0.1", documentroot: "/var/www/html"}
+  tasks:
+    - name: Install Apache
+      yum: name=httpd state=present
+    - name: Install PHP
+      yum: name=php state=present
+    - name: Install PHP Packages
+      yum: name={{ item }} state=present
+      with_items:
+        - php-common
+        - php-mysql
+        - php-mcrypt
+        - php-dom
+    - name: 'Install MySQL'
+      yum: name={{ item }} state=present
+      with_items:
+      - MySQL-python
+      - mysql
+      - mysql-server
+      notify:
+       - restart-mysql
+    - name: 'Start Mysql Service'
+      action: service name=mysqld state=started enabled=yes
+    - name: Add our Database
+      mysql_db: name=ashsmith_example state=present
+    - copy: src=example.sql dest=/tmp
+    - mysql_db: name=ashsmith_example state=import target=/tmp/example.sql
+    # - name: copy .my.cnf file with root password credentials
+    #   template: src=templates/my.cnf.j2 dest=/root/.my.cnf owner=root mode=0600
+    - name: Write vhosts.conf
+      action: template src=templates/vhosts.conf.j2 dest=/etc/httpd/conf.d/vhosts.conf
+    - name: Start Apache
+      service: name=httpd state=running enabled=yes
+    - command: chown -R apache:apache /var/www/html
+  handlers:
+    - name: restart-mysql
+      action: service name=mysqld state=restarted
