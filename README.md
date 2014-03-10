@@ -12,6 +12,7 @@ Run:
 
     vagrant up
 
+Open your browser to: `http://127.0.0.1:8080` to see if it has worked! You'll see some basic output from `html/index.php`
 
 ## Roadmap / POA
 
